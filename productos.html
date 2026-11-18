@@ -1,71 +1,37 @@
 <!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Productos</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Productos</title><link rel="stylesheet" href="style.css"></head>
 <body>
-
-    <header>
-        <h1>Inventario de Productos</h1>
-    </header>
-
-    <nav>
-        <a href="index.html">Inicio</a>
-        <a href="productos.html">Productos</a>
-        <a href="agregar.html">Agregar Producto</a>
-    </nav>
-
-    <main>
-
-        <table>
-
-            <tr>
-                <th>ID</th>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Existencia</th>
-            </tr>
-
-            <tr>
-                <td>1</td>
-                <td>Lápiz</td>
-                <td>Papelería</td>
-                <td>120</td>
-            </tr>
-
-            <tr>
-                <td>2</td>
-                <td>Cuaderno</td>
-                <td>Papelería</td>
-                <td>50</td>
-            </tr>
-
-            <tr>
-                <td>3</td>
-                <td>Borrador</td>
-                <td>Papelería</td>
-                <td>35</td>
-            </tr>
-
-            <tr>
-                <td>4</td>
-                <td>Regla</td>
-                <td>Papelería</td>
-                <td>40</td>
-            </tr>
-
-        </table>
-
-    </main>
-
-    <footer>
-        Sistema de Inventario
-    </footer>
-
-</body>
-
-</html>
+<header><h1>Inventario de Productos</h1></header>
+<nav><a href="index.html">Inicio</a><a href="productos.html" class="on">Productos</a><a href="agregar.html">Agregar Producto</a></nav>
+<main>
+<div class="bar"><input id="q" type="search" placeholder="Buscar por nombre o categoría…"><button class="btn" id="xls">Exportar a Excel</button><a class="btn gray" href="agregar.html">+ Nuevo</a></div>
+<div id="aviso"></div>
+<div class="wrap"><table><thead><tr><th>ID</th><th>Producto</th><th>Categoría</th><th>Existencia</th><th>Acciones</th></tr></thead><tbody id="tb"></tbody></table></div>
+</main>
+<footer>Sistema de Inventario</footer>
+<script src="app.js"></script>
+<script>
+const tb=document.getElementById("tb"),q=document.getElementById("q"),av=document.getElementById("aviso");
+const m=new URLSearchParams(location.search).get("m");
+if(m)av.innerHTML='<div class="msg ok">'+esc(m)+'</div>';
+function pintar(){
+  const t=q.value.trim().toLowerCase(),l=cargar();
+  const f=l.filter(p=>!t||p.nombre.toLowerCase().includes(t)||p.categoria.toLowerCase().includes(t));
+  if(!f.length){tb.innerHTML='<tr><td colspan="5" class="empty">'+(l.length?"Sin resultados para la búsqueda.":"No hay productos registrados.")+'</td></tr>';return}
+  tb.innerHTML=f.map(p=>`<tr><td>${p.id}</td><td title="${esc(p.descripcion)}">${esc(p.nombre)}</td><td>${esc(p.categoria)}</td><td class="${p.cantidad<=10?"low":""}">${p.cantidad}</td><td><a class="btn warn sm" href="agregar.html?id=${p.id}">Modificar</a> <button class="btn red sm" data-id="${p.id}">Eliminar</button></td></tr>`).join("");
+}
+tb.addEventListener("click",e=>{
+  const id=e.target.dataset.id;if(!id)return;
+  const l=cargar(),p=l.find(x=>x.id==id);if(!p)return;
+  if(!confirm('¿Eliminar "'+p.nombre+'"? Esta acción no se puede deshacer.'))return;
+  if(guardar(l.filter(x=>x.id!=id)))av.innerHTML='<div class="msg ok">Producto eliminado.</div>';
+  else av.innerHTML='<div class="msg bad">No se pudo guardar el cambio (almacenamiento no disponible).</div>';
+  pintar();
+});
+q.addEventListener("input",pintar);
+document.getElementById("xls").onclick=()=>{
+  const l=cargar();if(!l.length){av.innerHTML='<div class="msg bad">No hay datos para exportar.</div>';return}
+  exportarCSV(l);
+};
+pintar();
+</script></body></html>

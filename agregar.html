@@ -1,52 +1,40 @@
 <!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Agregar Producto</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agregar Producto</title><link rel="stylesheet" href="style.css"></head>
 <body>
-
-    <header>
-        <h1>Registro de Producto</h1>
-    </header>
-
-    <nav>
-        <a href="index.html">Inicio</a>
-        <a href="productos.html">Productos</a>
-        <a href="agregar.html">Agregar Producto</a>
-    </nav>
-
-    <main>
-
-        <form>
-
-            <label>Nombre del producto</label>
-            <input type="text" placeholder="Ingrese nombre">
-
-            <label>Categoría</label>
-            <input type="text" placeholder="Ingrese categoría">
-
-            <label>Descripción</label>
-            <textarea rows="4"></textarea>
-
-            <label>Cantidad</label>
-            <input type="number" placeholder="0">
-
-            <button type="submit">
-                Guardar Producto
-            </button>
-
-        </form>
-
-    </main>
-
-    <footer>
-        Sistema de Inventario
-    </footer>
-
-</body>
-
-</html>
+<header><h1 id="titulo">Registro de Producto</h1></header>
+<nav><a href="index.html">Inicio</a><a href="productos.html">Productos</a><a href="agregar.html" class="on">Agregar Producto</a></nav>
+<main>
+<div id="aviso"></div>
+<form id="f" novalidate>
+<label for="nombre">Nombre del producto</label><input id="nombre" maxlength="80" placeholder="Ingrese nombre"><div class="err" id="e-nombre"></div>
+<label for="categoria">Categoría</label><input id="categoria" maxlength="60" placeholder="Ingrese categoría"><div class="err" id="e-categoria"></div>
+<label for="descripcion">Descripción (opcional)</label><textarea id="descripcion" rows="3" maxlength="220"></textarea><div class="err" id="e-descripcion"></div>
+<label for="cantidad">Cantidad</label><input id="cantidad" inputmode="numeric" placeholder="0"><div class="err" id="e-cantidad"></div>
+<button class="btn" type="submit" id="btn">Guardar Producto</button>
+</form>
+</main>
+<footer>Sistema de Inventario</footer>
+<script src="app.js"></script>
+<script>
+const $=i=>document.getElementById(i);
+const id=+new URLSearchParams(location.search).get("id")||0;
+let editando=null;
+if(id){
+  editando=cargar().find(p=>p.id===id);
+  if(!editando){$("f").style.display="none";$("aviso").innerHTML='<div class="msg bad">El producto no existe o ya fue eliminado. <a href="productos.html">Volver</a></div>'}
+  else{$("titulo").textContent="Modificar Producto";$("btn").textContent="Guardar cambios";
+    $("nombre").value=editando.nombre;$("categoria").value=editando.categoria;$("descripcion").value=editando.descripcion;$("cantidad").value=editando.cantidad}
+}
+$("f").addEventListener("submit",e=>{
+  e.preventDefault();
+  const lista=cargar();
+  const d={nombre:norm($("nombre").value),categoria:norm($("categoria").value),descripcion:norm($("descripcion").value),cantidadTxt:$("cantidad").value.trim()};
+  const er=validar(d,lista,editando?editando.id:0);
+  ["nombre","categoria","descripcion","cantidad"].forEach(k=>$("e-"+k).textContent=er[k]||"");
+  if(Object.keys(er).length)return;
+  const reg={id:editando?editando.id:nuevoId(lista),nombre:d.nombre,categoria:d.categoria,descripcion:d.descripcion,cantidad:+d.cantidadTxt};
+  const nueva=editando?lista.map(p=>p.id===reg.id?reg:p):[...lista,reg];
+  if(!guardar(nueva)){$("aviso").innerHTML='<div class="msg bad">No se pudo guardar: el navegador bloqueó el almacenamiento.</div>';return}
+  location.href="productos.html?m="+encodeURIComponent(editando?"Producto modificado correctamente.":"Producto guardado correctamente.");
+});
+</script></body></html>
